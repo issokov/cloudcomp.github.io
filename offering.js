@@ -64,6 +64,7 @@ function onReadAsDataURL(event, text) {
 
 function datachannelopen() {
   console.log('datachannelopen, connected');
+  counter.innerHTML = parseInt(counter.innerHTML) + 1;
   fileInput.disabled = false;
 }
 
@@ -87,6 +88,5 @@ async function clickanswerpasted() {
   textelement = document.getElementById('answer_area');
   answer = JSON.parse(textelement.value);
   await peerConnection.setRemoteDescription(answer);
-  counter.innerHTML = parseInt(counter.innerHTML) + 1;
 }
 
