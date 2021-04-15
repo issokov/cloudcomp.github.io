@@ -1,20 +1,26 @@
 var fileInput = document.getElementById('fileInput')
 var sendFile = document.getElementById('sendFile')
 var chunkLength = 1000;
+var counter = document.getElementById('counter');
+
+var connections = [];
+var channels = [];
+
 
 sendFile.addEventListener('click', sendData);
 fileInput.addEventListener('change', handleFileInputChange, false);
 
 
-function clickcreateoffer() {
-  console.log('Create offer ...');
-  document.getElementById('gen_offer').disabled = true;
+async function clickcreateoffer() {
+  console.log('Creating offer');
   peerConnection = createPeerConnection(lasticecandidate);
-  dataChannel = peerConnection.createDataChannel('chat');
+  dataChannel = peerConnection.createDataChannel('channel');
   dataChannel.onopen = datachannelopen;
   dataChannel.onmessage = datachannelmessage;
-  createOfferPromise = peerConnection.createOffer();
-  createOfferPromise.then(createOfferDone, createOfferFailed);
+  offer = await peerConnection.createOffer();
+  await peerConnection.setLocalDescription(offer);
+  connections.push(peerConnection);
+  channels.push(dataChannel);
 }
 
 
@@ -47,24 +53,17 @@ function onReadAsDataURL(event, text) {
         data.message = text;
         data.last = true;
     }
-
-    dataChannel.send(JSON.stringify(data));
-    
+	for (let channel of channels) {
+    	channel.send(JSON.stringify(data));
+    }
     var remainingDataURL = text.slice(data.message.length);
     if (remainingDataURL.length) setTimeout(function () {
         onReadAsDataURL(null, remainingDataURL);
-    }, 100)
-}
-
-function createOfferDone(offer) {
-  console.log('createOfferDone');
-  setLocalPromise = peerConnection.setLocalDescription(offer);
-  setLocalPromise.then(setLocalDone, setLocalFailed);
+    }, 50)
 }
 
 function datachannelopen() {
-  console.log('datachannelopen');
-  chatlog('connected');
+  console.log('datachannelopen, connected');
   fileInput.disabled = false;
 }
 
@@ -74,19 +73,6 @@ function datachannelmessage(message) {
   text = message.data;
 }
 
-function createOfferFailed(reason) {
-  console.log('createOfferFailed');
-  console.log(reason);
-}
-
-function setLocalDone() {
-  console.log('setLocalDone');
-}
-
-function setLocalFailed(reason) {
-  console.log('setLocalFailed');
-  console.log(reason);
-}
 
 function lasticecandidate() {
   console.log('lasticecandidate');
@@ -95,24 +81,12 @@ function lasticecandidate() {
   textelement.value = JSON.stringify(offer);
 }
 
-function clickoffersent() {
-  console.log('clickoffersent');
-}
 
-function clickanswerpasted() {
+async function clickanswerpasted() {
   console.log('Answer pasted');
   textelement = document.getElementById('answer_area');
   answer = JSON.parse(textelement.value);
-  setRemotePromise = peerConnection.setRemoteDescription(answer);
-  setRemotePromise.then(setRemoteDone, setRemoteFailed);
-}
-
-function setRemoteDone() {
-  console.log('setRemoteDone');
-}
-
-function setRemoteFailed(reason) {
-  console.log('setRemoteFailed');
-  console.log(reason);
+  await peerConnection.setRemoteDescription(answer);
+  counter.innerHTML = parseInt(counter.innerHTML) + 1;
 }
 
