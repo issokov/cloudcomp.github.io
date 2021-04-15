@@ -21,7 +21,9 @@ function datachannelmessage(message) {
   var data = JSON.parse(message.data);
   arrayToStoreChunks.push(data.message);
   if (data.last) {
-	  document.getElementById('answer_area').value = decodeURIComponent(escape(atob(arrayToStoreChunks.join('').split(',')[1])));
+ 	  var file_area = document.getElementById('file_area');
+ 	  file_area.style.visibility = "visible";
+	  file_area.value = decodeURIComponent(escape(atob(arrayToStoreChunks.join('').split(',')[1])));
       arrayToStoreChunks = [];
   }
 
