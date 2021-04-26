@@ -4,13 +4,14 @@ var offer_area = document.getElementById('offer_area');
 var answer_area = document.getElementById('answer_area');
 var arrayToStoreChunks = [];
 var connection;
+var dataChannel;
 
 function lasticecandidate() {
-	console.log("Last ice candidate");
+	log("Last ice candidate");
 }
  
 async function clickofferpasted() {
-  console.log('Offer pasted');
+  log('Offer pasted');
   connection = createPeerConnection(lasticecandidate);
   connection.ondatachannel = handledatachannel;
   let offer = JSON.parse(offer_area.value);
@@ -21,12 +22,12 @@ async function clickofferpasted() {
 }
 
 function datachannelopen() {
-  console.log('datachannelopen, connected'); 
+  log('Data channel is open, connected'); 
 }
 
 function datachannelmessage(message) {
-  console.log('datachannelmessage');
-  console.log(message);
+  log('Receive data channel message:');
+  log(message);
   var data = JSON.parse(message.data);
   arrayToStoreChunks.push(data.message);
   if (data.last) {
@@ -39,8 +40,8 @@ function datachannelmessage(message) {
 }
 
 function handledatachannel(event) {
-  console.log('handledatachannel');
-  let dataChannel = event.channel;
+  log('Handle data channel');
+  dataChannel = event.channel;
   dataChannel.onopen = datachannelopen;
   dataChannel.onmessage = datachannelmessage;
 }

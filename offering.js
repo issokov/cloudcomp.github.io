@@ -10,45 +10,47 @@ var channels = [];
 
 
 
+
+
 function datachannelopen() {
-  console.log('datachannelopen, connected');
+  log('datachannelopen, connected');
   counter.innerHTML = parseInt(counter.innerHTML) + 1;
   fileInput.disabled = false;
 }
 
 function datachannelmessage(message) {
-  console.log('datachannelmessage');
-  console.log(message);
+  log('datachannelmessage');
+  log(message);
   text = message.data;
 }
 
 function lasticecandidate() {
-  console.log('lasticecandidate');
+  log('It was last ICE candidate');
   let offer = connections[connections.length - 1].localDescription;
   document.getElementById('offer_area').value = JSON.stringify(offer);
 }
 
 async function clickcreateoffer() {
-  console.log('Creating offer');
+  log('Creating offer');
   let peerConnection = createPeerConnection(lasticecandidate);
   peerConnection.oniceconnectionstatechange = function(){	
-		console.log('oniceconnectionstatechange:');
-		console.log(connections[connections.length - 1].iceConnectionState);
+		log('oniceconnectionstatechange:');
+		log(connections[connections.length - 1].iceConnectionState);
   }
+  connections.push(peerConnection);
   let dataChannel = peerConnection.createDataChannel('channel');
   dataChannel.onopen = datachannelopen;
   dataChannel.onmessage = datachannelmessage;
-  let offer = await peerConnection.createOffer();
-  await peerConnection.setLocalDescription(offer);
-  connections.push(peerConnection);
   channels.push(dataChannel);
+  let offer = await peerConnection.createOffer();
+  await peerConnection.setLocalDescription(offer).then(() => {log("Local description OK");}).catch((error) => {log("LD set error: " + error);});
 }
 
 
 async function handleFileInputChange() {
   const file = fileInput.files[0];
   if (!file) {
-    console.log('No file chosen');
+    log('No file chosen');
   } else {
       sendFile.disabled = false;
   }
@@ -57,7 +59,7 @@ async function handleFileInputChange() {
 
 function sendData() {
   const file = fileInput.files[0];
-  console.log(`File is ${[file.name, file.size, file.type].join(' ')}`);
+  log(`File is ${[file.name, file.size, file.type].join(' ')}`);
   var reader = new window.FileReader();
   reader.readAsDataURL(file);
   reader.onload = onReadAsDataURL;
@@ -84,10 +86,21 @@ function onReadAsDataURL(event, text) {
 }
 
 
+
 async function clickanswerpasted() {
-  console.log('Answer pasted');
+  log('Answer pasted');
   let answer = JSON.parse(document.getElementById('answer_area').value);
-  await connections[connections.length - 1].setRemoteDescription(answer);
+  await connections[connections.length - 1].setRemoteDescription(answer).then(
+    () => {
+        log("Remote description setting has been done");
+        log("Signaling state: " + connections[connections.length - 1].signalingState);
+        log("ICE connection state: " + connections[connections.length - 1].iceConnectionState);
+        log("ICE gathering state: " + connections[connections.length - 1].iceGatheringState);
+    }).catch(
+    (error) => {
+        log(error);
+    }
+  );
 }
 
 sendFile.addEventListener('click', sendData);

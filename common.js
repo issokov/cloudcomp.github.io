@@ -1,7 +1,7 @@
 "use strict"
 
 function createPeerConnection(lasticecandidate) {
-  console.log("Creating peer connection");
+  log("Creating peer connection");
   let configuration = {
     iceServers: [{
       urls: "stun:stun.l.google.com:19302"
@@ -11,23 +11,31 @@ function createPeerConnection(lasticecandidate) {
     let peerConnection = new RTCPeerConnection(configuration);
     peerConnection.onicecandidate = handleicecandidate;
     peerConnection.addEventListener("icecandidateerror", (event) => {
-  	console.log("Error url: " + event.url);
-  	console.log("Error text: " + event.errorText);
-  });
-  return peerConnection;
+	  	log("Error url: " + event.url);
+	  	log("Error text: " + event.errorText);
+	});
+	return peerConnection;
   } catch(err) {
-    console.log('error: ' + err);
+    log('error: ' + err);
   }
 }
 
+var logDiv = document.getElementById('log');
+function log(message) {
+ console.log(message);
+ var tag = document.createElement("p");
+ var text = document.createTextNode(message);
+ tag.appendChild(text);
+ logDiv.appendChild(tag);
+}
 
 
 function handleicecandidate(event) {
     if (event.candidate != null) {
-      console.log('new ice candidate');
-      console.log(event.candidate)
+       log('New ice candidate:');
+       log(event.candidate)
     } else {
-      console.log('all ice candidates');
+      log('All ice candidates accepted.');
       lasticecandidate();
     }
 }
