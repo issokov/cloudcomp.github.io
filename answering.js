@@ -7,18 +7,20 @@ var connection;
 var dataChannel;
 
 function lasticecandidate() {
-	log("Last ice candidate");
+  log('Last ice candidate');
+  let answer = connection.localDescription
+  answer_area.value = JSON.stringify(answer);
 }
+
  
 async function clickofferpasted() {
   log('Offer pasted');
   connection = createPeerConnection(lasticecandidate);
   connection.ondatachannel = handledatachannel;
   let offer = JSON.parse(offer_area.value);
-  await connection.setRemoteDescription(offer);
+  await connection.setRemoteDescription(offer).then(() => {log("Local description OK");}).catch((error) => {log("LD set error: " + error);});
   let answer = await connection.createAnswer();
-  await connection.setLocalDescription(answer);
-  answer_area.value = JSON.stringify(answer);
+  await connection.setLocalDescription(answer).then(() => {log("Local description OK");}).catch((error) => {log("LD set error: " + error);});
 }
 
 function datachannelopen() {
