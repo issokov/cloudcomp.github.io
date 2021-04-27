@@ -1,5 +1,7 @@
 "use strict"
 
+let chunkLength = 10000;
+
 function createPeerConnection(lasticecandidate) {
   log("Creating peer connection");
   let configuration = {
@@ -11,8 +13,10 @@ function createPeerConnection(lasticecandidate) {
     let peerConnection = new RTCPeerConnection(configuration);
     peerConnection.onicecandidate = handleicecandidate;
     peerConnection.addEventListener("icecandidateerror", (event) => {
-	  	log("Error url: " + event.url);
-	  	log("Error text: " + event.errorText);
+        if (event.errorCode != 701) {
+	  	    log("Error url: " + event.url);
+	  	    log("Error text: " + event.errorText);
+	  	}
 	});
 	return peerConnection;
   } catch(err) {
@@ -20,22 +24,18 @@ function createPeerConnection(lasticecandidate) {
   }
 }
 
-var logDiv = document.getElementById('log');
+var log_area = document.getElementById('log');
 function log(message) {
- console.log(message);
- var tag = document.createElement("p");
- var text = document.createTextNode(message);
- tag.appendChild(text);
- logDiv.appendChild(tag);
+   console.log(message);
+   log_area.value += message + "\n";
 }
 
 
 function handleicecandidate(event) {
     if (event.candidate != null) {
-       log('New ice candidate:');
-       log(event.candidate)
+       log('One more ice candidate');
     } else {
-      log('All ice candidates accepted.');
+      log('There is no more ice candidates');
       lasticecandidate();
     }
 }

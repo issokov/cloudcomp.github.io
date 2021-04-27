@@ -8,16 +8,17 @@
 </head>
 
 <body>
-  <textarea id="offer_area" name="comment" cols="50" rows="10"></textarea><br>
+  <textarea id="area" name="comment" cols="50" rows="10"></textarea><br>
   <button id="gen_offer" onclick="clickcreateoffer()">Generate offer</button><br>
-  <textarea id="answer_area" name="comment" cols="50" rows="10"></textarea><br>
-  <button id="accept_answer" onclick="clickanswerpasted()">Accept answer</button><p>devices Connected</p><p id="counter">0</p><br>
+  <button disabled id="accept_answer" onclick="clickanswerpasted()">Accept answer</button><br>
+  <p><span>Devices connected: </span><span id="counter">0</span><br></p>
   <form id="fileInfo">
-  	<input disabled type="file" id="fileInput" name="files"/>
+    <input id="args" type="text" >
+  	<input disabled type="file" id="fileInput" name="files">
   </form>
   <button disabled id="sendFile">Send</button>
-  <a href="connect.html"">To connection page</a>
-  <div id="log"></div>
+  <a href="connect.html"">To connection page</a><br>
+  <textarea id="log" readonly="readonly" cols="50" rows="10"></textarea>
   <script src="common.js"></script>
   <script src="offering.js"></script>
 </body>
