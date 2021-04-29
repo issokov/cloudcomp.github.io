@@ -57,6 +57,7 @@ function datachannelmessage(message) {
 					id: channel_id,
 					result: result.toString()
 				}));
+				received = 0;
 			});
 		}
 		received += 1;

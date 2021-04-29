@@ -40,6 +40,7 @@ function datachannelmessage(message) {
 	    	log("Combining results:");
 	    	processWASM(wasmArrayBuffer, results).then((result) => {
 	    		log("Total result: " + result);
+	    		results = [];
 	    	});
 		}
 	} else {
