@@ -2,24 +2,110 @@
 
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-
-  <title>Page</title>
+    <meta charset="utf-8">
+    <title>Main page</title>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css">
 </head>
 
-<body>
-  <textarea id="area" name="comment" cols="50" rows="10"></textarea><br>
-  <button id="gen_offer" onclick="clickcreateoffer()">Generate offer</button><br>
-  <button disabled id="accept_answer" onclick="clickanswerpasted()">Accept answer</button><br>
-  <p><span>Devices connected: </span><span id="counter">0</span><br></p>
-  <form id="fileInfo">
-    <input id="args" type="text" >
-  	<input disabled type="file" id="fileInput" name="files">
-  </form>
-  <button disabled id="sendFile">Send</button>
-  <a href="connect.html"">To connection page</a><br>
-  <textarea id="log" readonly="readonly" cols="50" rows="10"></textarea>
-  <script src="common.js"></script>
-  <script src="offering.js"></script>
+<body class=>
+<div class="container vh-100 vw-50 flex-column d-flex align-items-center justify-content-center">
+    <div class="form-row w-100 mb-3">
+        <div class="accordion" id="accordionExample">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingOne">
+                    <button class="accordion-button fs-3" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseOne"
+                            aria-expanded="true" aria-controls="collapseOne">
+                        Add execution node
+                    </button>
+                </h2>
+            </div>
+            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne"
+                 data-bs-parent="#accordionExample">
+                <div class="accordion-body container-fluid">
+                    <div class="row mb-3">
+                        <div class="col-8">
+                            <div class="form-row">
+                                <h3 class="text-center text-primary" id="hint_label">Push button below for create the
+                                    offer.</h3>
+                            </div>
+                            <div class="form-row">
+                                <button class="btn btn-outline-primary form-control" id="gen_offer"
+                                        onclick="clickcreateoffer()">
+                                    Generate offer & copy to clipboard
+                                </button>
+                            </div>
+                            <div class="form-row d-flex">
+                                <textarea id="area" name="comment" class="form-control" rows="5"
+                                          placeholder="Paste the consumer answer there and click button below"></textarea>
+
+                            </div>
+                            <div class="form-row">
+                                <button disabled class="btn btn-outline-success form-control"
+                                        id="accept_answer"
+                                        onclick="clickanswerpasted()">Accept answer
+                                </button>
+
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="row">
+                                <label class="text-center text-primary fs-3" for="log">Connection logs</label>
+                            </div>
+                            <div class="row d-flex">
+                                <textarea class="form-control flex-grow-1" id="log" readonly="readonly"
+                                          rows="8"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row w-100">
+        <div class="col">
+            <div class="d-flex flex-column h-100">
+                <div class="row">
+                    <p class="fs-3"><span>Devices connected: </span><span id="counter">0</span></p>
+                </div>
+                <div class="row flex-grow-1 mb-3">
+                    <div class="col">
+                        <ul id="list" class="h-100 list-group form-control"></ul>
+                    </div>
+
+                </div>
+                <div class="row">
+                    <div class="d-grid gap-2 ">
+                        <a href="connect.html" class="btn btn-success"> To connection page</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="col h-100 d-flex">
+            <form id="fileInfo" class="form-group w-100" onsubmit="return false">
+                <div class="h-100 w-100 d-flex flex-column">
+                    <div class="row d-flex flex-column flex-grow-1">
+                        <label class="fs-3 mb-3" for="args">Arguments splitted by space</label>
+                        <textarea class="form-control flex-grow-1" id="args"></textarea>
+
+                    </div>
+                    <div class="row">
+                        <input class="form-control" disabled type="file" id="fileInput" name="files">
+                    </div>
+                    <div class="row">
+                        <button class="form-control" disabled id="sendFile">Send</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script src="common.js"></script>
+<script src="offering.js"></script>
+<script src="js/bootstrap.min.js"></script>
+
 </body>
 </html>

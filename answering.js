@@ -1,6 +1,6 @@
 "use strict"
-
-var area = document.getElementById('area');
+let hint = document.getElementById("hint_label");
+var area = document.getElementById('log');
 var wasmArrayBuffer, received = 0;
 var connection;
 var dataChannel;
@@ -12,11 +12,18 @@ function lasticecandidate() {
 	log("Generating answer");
 	let answer = connection.localDescription
 	area.value = JSON.stringify(answer);
+	area.select();
+	area.setSelectionRange(0, 99999);
+	document.execCommand("copy");
+	area.value = "There will be logs.\n";
+	log("Awaiting when the main node accept your answer...")
+	area.disabled = true;
+	hint.className = "text-center text-danger fs-3 mb-2"
+	hint.innerText = "Your answer on the clipboard, send it to the main node.";
 }
 
- 
+
 async function clickofferpasted() {
-	log('Offer pasted');
 	connection = createPeerConnection(lasticecandidate);
 	connection.ondatachannel = handledatachannel;
 	let offer = JSON.parse(area.value);
@@ -27,6 +34,9 @@ async function clickofferpasted() {
 
 function datachannelopen() {
 	log('Data channel is open, connected');
+	hint.className = "text-center text-success fs-3 mb-2"
+	hint.innerText = "Connection established.";
+	log("The answer was accepted by main node!")
 }
 
 function datachannelmessage(message) {
@@ -39,7 +49,6 @@ function datachannelmessage(message) {
 			type: "greating",
 			id: channel_id
 		}));
-		area.remove();
 		document.getElementById("gen_answer").remove();
 	} else if (data.type === "args"){
 		args = data.args;

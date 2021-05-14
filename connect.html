@@ -2,16 +2,31 @@
 
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-
-  <title>Page</title>
+    <meta charset="utf-8">
+    <title>Node page</title>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css">
 </head>
 
 <body>
-  <textarea id="area" placeholder="Put producer offer there"cols="50" rows="10"></textarea><br>
-  <button id="gen_answer" onclick="clickofferpasted()" >Generate answer</button><br>
-  <textarea readonly="readonly" id="log" cols="50" rows="10"></textarea><br>
-  <script src="common.js"></script>
-  <script src="answering.js"></script>
+<div class="vh-100 w-50 container">
+    <div class="h-100 d-flex flex-column justify-content-center align-self-center">
+        <div class="row mb-2">
+            <label class="text-center text-primary fs-3 mb-2" for="log" id="hint_label">Put the offer then push button below</label>
+            <textarea id="log" placeholder="Put producer offer there then push the button" rows="10" class="form-control"></textarea><br>
+        </div>
+        <div class="row">
+            <button id="gen_answer" class="btn btn-success" onclick="clickofferpasted()">Generate the answer & copy to clipboard</button>
+            <br>
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="common.js"></script>
+<script src="answering.js"></script>
+<script src="js/bootstrap.min.js"></script>
+
 </body>
 </html>
