@@ -37,6 +37,7 @@ async function processWASM(wasmBytes, args) {
     for (let c = 0; c < args.length; c++) {
 		memoryAsArray[c] = args[c];
 	}
+
     let results = await WebAssembly.instantiate(wasmBytes, {env: {"memory": memory}});
 	return results.instance.exports.main(args.length);
 

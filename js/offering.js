@@ -9,12 +9,32 @@ let ul = document.getElementById("list");
 let new_connection, new_channel;
 let connections = [], channels = [], list_items = [], results = [];
 
+let code_area = document.getElementById('code');
 let counter = document.getElementById('counter');
 let fileInput = document.getElementById('fileInput')
 let sendFile = document.getElementById('sendFile')
+let output = document.getElementById('output')
+let result_label = document.getElementById('result');
 let reader = new window.FileReader();
 let wasmArrayBuffer;
+let glob_asc;
+let compiled;
 
+function log_compile(value) {
+    if (value[value.length - 1] !== '\n') {
+        value += '\n';
+    }
+    output.value += value;
+    output.scrollTop = output.scrollHeight;
+}
+
+require(["https://cdn.jsdelivr.net/npm/assemblyscript@latest/dist/sdk.js"], ({asc}) => {
+    asc.ready.then(() => {
+        log_compile("Compiler is ready");
+        document.getElementById('compile_btn').disabled = false;
+    });
+    glob_asc = asc;
+});
 
 function datachannelopen() {
     connections.push(new_connection);
@@ -38,9 +58,12 @@ function datachannelmessage(message) {
     if (data.type === 'greating') {
         counter.innerHTML = parseInt(counter.innerHTML) + 1;
         fileInput.disabled = false;
-        hint.innerText = "Add more nodes or select WASM binfile, pass args and execute!"
-        hint.className = "text-center text-success"
+        hint.innerText = "Add more nodes or compile/select wasm binary file, than pass args and execute!"
+        hint.className = "fs-2 text-center text-success"
         log("The consumer id=" + data.id + " replied to the greeting.");
+        if (connections.length !== 0 && (compiled !== null || fileInput.files.length)) {
+            sendFile.disabled = false;
+        }
     } else if (data.type === "result") {
         let id = data.id, result = data.result;
         log("Result from node(ID=" + id + "): " + result);
@@ -52,8 +75,14 @@ function datachannelmessage(message) {
             processWASM(wasmArrayBuffer, results).then((result) => {
                 log("Total result: " + result);
                 results = [];
+                result_label.innerText = "Result: " + result;
+                result_label.className = "text-danger fs-3"
             });
         }
+    } else if (data.type === "error") {
+        let id = data.id, result = data.result;
+        list_items[id].innerHTML = "Device №" + (id) + " threw exception: " + result;
+        list_items[id].className = "list-group-item text-danger fw-bold"
     } else {
         log("Unknown message received:");
         log(data);
@@ -70,7 +99,7 @@ function lasticecandidate() {
     area.setSelectionRange(0, 99999);
     document.execCommand("copy");
     area.value = "";
-    hint.className = "text-center text-danger"
+    hint.className = "text-center text-danger fs-2"
     hint.innerText = "Send the offer to the node and await the answer.";
     log("The offer has been copied to the clipboard");
 }
@@ -102,19 +131,76 @@ async function clickcreateoffer() {
     });
 }
 
+function compile() {
+    log_compile('Compiling...')
+    log_compile('--------------------------------')
+    const stdout = glob_asc.createMemoryStream();
+    const stderr = glob_asc.createMemoryStream();
+    glob_asc.main([
+        "module.ts",
+        "-O3",
+        "--importMemory",
+        "--runtime", "stub",
+        "--binaryFile", "module.wasm",
+        "--textFile", "module.wat",
+        "--sourceMap"
+    ], {
+        stdout,
+        stderr,
+        readFile(name, baseDir) {
+            return name === "module.ts" ? code_area.value : null;
+        },
+        writeFile(name, data, baseDir) {
+            if (name === 'module.wasm') {
+                log_compile(`Compiled.\nSize: ${data.length} bytes`);
+                compiled = data;
+                if (connections.length !== 0) {
+                    sendFile.disabled = false;
+                }
+            }
+        },
+        listFiles(dirname, baseDir) {
+            return [];
+        }
+    }, err => {
+        if (stdout.toString() !== '') {
+            log_compile(`>>> STDOUT >>>\n${stdout.toString()}`);
+        }
+        if (stderr.toString() !== '') {
+            log_compile(`>>> STDERR >>>\n${stderr.toString()}`);
+        }
+        if (err) {
+            compiled = null;
+            sendFile.disabled = true;
+            log_compile(">>> THROWN >>>");
+            log_compile(err);
+        }
+    });
+}
+
 
 async function handleFileInputChange() {
     const file = fileInput.files[0];
+    compiled=null;
     if (!file) {
         log('Abort: no file chosen');
     } else {
-        sendFile.disabled = false;
+        if (connections.length !== 0) {
+            sendFile.disabled = false;
+        }
     }
 }
 
 
 function sendData() {
-    const file = fileInput.files[0];
+    let file = fileInput.files[0];
+    if (compiled !== null) {
+        file = {
+            'name': 'module.wasm',
+            'size': compiled.length,
+            'type': 'bytes'
+        }
+    }
     log(`File is ${[file.name, file.size, file.type].join(' ')}`);
     let args = document.getElementById('args').value.split(' ').map((value) => {
         return parseInt(value, 10)
@@ -139,8 +225,13 @@ function sendData() {
             args: partial_args
         }));
     }
-    reader.onloadend = onLoadEnd;
-    reader.readAsArrayBuffer(file);
+    if (compiled === null) {
+        reader.onloadend = onLoadEnd;
+        reader.readAsArrayBuffer(file);
+    } else {
+        wasmArrayBuffer = compiled.slice(0);
+        sendFileToNodes(compiled.slice(0));
+    }
 }
 
 function arrayBufferToBase64(buffer) {
@@ -152,24 +243,27 @@ function arrayBufferToBase64(buffer) {
     return window.btoa(binary);
 }
 
-function onLoadEnd(event) {
-    let sent = 0, data = {type: "file"};
-    wasmArrayBuffer = reader.result.slice(0);
-    let fileData = reader.result;
-    log("Sending file. Remain: " + fileData.byteLength)
-    while (fileData.byteLength) {
-        data.file_data = arrayBufferToBase64(fileData.slice(0, Math.min(chunkLength, fileData.byteLength)));
-        fileData = fileData.slice(chunkLength);
-        if (!fileData.byteLength) {
+function sendFileToNodes(file) {
+    let data = {type: "file"};
+    log("Sending file. Remain: " + file.byteLength)
+    while (file.byteLength) {
+        data.file_data = arrayBufferToBase64(file.slice(0, Math.min(chunkLength, file.byteLength)));
+        file = file.slice(chunkLength);
+        if (!file.byteLength) {
             data.last = true;
         }
-        log("Data was sent. Remain: " + fileData.byteLength);
+        log("Data was sent. Remain: " + file.byteLength);
         for (let i = 0; i < channels.length; i++) {
             if (connections[i].iceConnectionState === "connected") {
                 channels[i].send(JSON.stringify(data));
             }
         }
     }
+}
+
+function onLoadEnd(event) {
+    wasmArrayBuffer = reader.result.slice(0);
+    sendFileToNodes(reader.result)
 }
 
 
